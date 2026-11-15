@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       build_native_ndk:
-        description: 'Compile C++ NDK/Oboe DSP engine (requires NDK & CMake)'
+        description: 'Compile C++ NDK/Oboe DSP engine'
         required: false
         default: true
         type: boolean
@@ -24,25 +24,40 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android CMake & NDK
-        if: ${{ inputs.build_native_ndk != false }}
+      - name: Configure Android SDK, Licenses & NDK
         run: |
-          yes | sdkmanager --licenses > /dev/null 2>&1 || true
-          sdkmanager "cmake;3.22.1" "ndk;27.2.12479018"
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+
+          SDKMANAGER=$(command -v sdkmanager || ls "$SDK_ROOT"/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -n 1 || true)
+          if [ -n "$SDKMANAGER" ]; then
+            yes | "$SDKMANAGER" --licenses > /dev/null 2>&1 || true
+            if [ "${{ inputs.build_native_ndk != false }}" = "true" ]; then
+              if [ ! -d "$SDK_ROOT/cmake" ] || [ -z "$(ls -A "$SDK_ROOT/cmake" 2>/dev/null)" ]; then
+                "$SDKMANAGER" "cmake;3.22.1"
+              fi
+              if [ ! -d "$SDK_ROOT/ndk" ] || [ -z "$(ls -A "$SDK_ROOT/ndk" 2>/dev/null)" ]; then
+                LATEST_NDK=$("$SDKMANAGER" --list 2>/dev/null | grep -oE 'ndk;[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -n 1 || true)
+                if [ -n "$LATEST_NDK" ]; then
+                  "$SDKMANAGER" "$LATEST_NDK"
+                fi
+              fi
+            fi
+          fi
+          echo "SDK NDKs:" && ls -1 "$SDK_ROOT/ndk" 2>/dev/null || true
+          echo "SDK CMakes:" && ls -1 "$SDK_ROOT/cmake" 2>/dev/null || true
 
       - name: Set up Gradle 9.3.1
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
         with:
           gradle-version: '9.3.1'
 

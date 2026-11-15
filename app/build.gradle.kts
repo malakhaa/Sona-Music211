@@ -27,16 +27,23 @@ android {
   }
 
   // NDK / CMake native C++ DSP engine (Oboe, SoX resampler, FFmpeg, TagLib JNI).
-  // Automatically activates when NDK & CMake are installed (e.g., AndroidIDE / local NDK)
+  // Automatically activates when NDK & CMake are installed (e.g., AndroidIDE / GitHub Actions)
   // or when invoked with -PenableNativeDsp=true.
   val sdkRoot = System.getenv("ANDROID_SDK_ROOT") ?: System.getenv("ANDROID_HOME")
+  val installedNdkVersion = sdkRoot?.let { root ->
+    file("$root/ndk").listFiles()?.filter { it.isDirectory }?.maxOfOrNull { it.name }
+  }
+  val installedCmakeVersion = sdkRoot?.let { root ->
+    file("$root/cmake").listFiles()?.filter { it.isDirectory }?.maxOfOrNull { it.name }
+  }
   val hasNdkAndCmake =
     (project.findProperty("enableNativeDsp")?.toString()?.toBoolean() == true) ||
-      (sdkRoot != null &&
-        file("$sdkRoot/ndk").let { it.exists() && (it.listFiles()?.isNotEmpty() == true) } &&
-        file("$sdkRoot/cmake").let { it.exists() && (it.listFiles()?.isNotEmpty() == true) })
+      (installedNdkVersion != null && installedCmakeVersion != null)
 
   if (hasNdkAndCmake) {
+    if (installedNdkVersion != null) {
+      ndkVersion = installedNdkVersion
+    }
     defaultConfig {
       externalNativeBuild {
         cmake {
@@ -48,7 +55,9 @@ android {
     externalNativeBuild {
       cmake {
         path = file("src/main/cpp/CMakeLists.txt")
-        version = "3.22.1"
+        if (installedCmakeVersion != null) {
+          version = installedCmakeVersion
+        }
       }
     }
   }
