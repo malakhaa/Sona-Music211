@@ -1,0 +1,6 @@
+{
+  "name": "Sona Music",
+  "description": "Audiophile-grade hi-res Android music player with Media3 playback, 10-band DSP, USB DAC bypass, hardware auto-switching, and Bezton IR home theater remote.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

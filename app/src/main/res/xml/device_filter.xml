@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- USB Audio Class (UAC 1.0 / 2.0) devices: class 1 = Audio -->
+    <usb-device class="1" />
+    <!-- Common audiophile vendor-specific UAC 2.0 bridges (XMOS, Savitech, ESS, FiiO, iFi, Chord, Schiit) -->
+    <usb-device vendor-id="8365" /> <!-- XMOS Ltd -->
+    <usb-device vendor-id="10610" /> <!-- FiiO -->
+    <usb-device vendor-id="4617" /> <!-- Savitech -->
+    <usb-device vendor-id="1115" /> <!-- Texas Instruments Burr-Brown -->
+    <usb-device vendor-id="3141" /> <!-- Realtek USB Audio -->
+</resources>
